@@ -1,0 +1,87 @@
+import pygame
+import math
+import sys
+
+# Initialize
+pygame.init()
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+clock = pygame.time.Clock()
+pygame.display.set_caption("Mini Kart - Track Mode")
+
+# Load track image
+track = pygame.image.load("track.png").convert()  # Make sure it's 800x600 or resize
+track = pygame.transform.scale(track, (WIDTH, HEIGHT))
+
+# Load kart image
+kart = pygame.image.load("kart.png")
+kart = pygame.transform.scale(kart, (50, 30))
+
+# Colors
+GREEN = (0, 200, 0)
+BLACK = (0, 0, 0)
+
+# Kart position and physics
+x, y = 400, 300
+angle = 0
+speed = 0
+acceleration = 0.2
+friction = 0.05
+max_speed = 5
+
+running = True
+while running:
+    screen.blit(track, (0, 0))  # Draw the track background
+
+    # Get color under kart center
+    pixel_color = track.get_at((int(x), int(y)))[:3]
+
+    # Off-track penalty
+    if pixel_color == GREEN:
+        speed *= 0.95  # Slow down
+    elif pixel_color == BLACK:
+        speed = 0  # Stop on wall
+
+    # Input
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_UP]:
+        speed += acceleration
+    if keys[pygame.K_DOWN]:
+        speed -= acceleration
+    if keys[pygame.K_LEFT]:
+        angle += 3
+    if keys[pygame.K_RIGHT]:
+        angle -= 3
+
+    # Clamp speed
+    if speed > max_speed:
+        speed = max_speed
+    if speed < -max_speed:
+        speed = -max_speed
+
+    # Apply friction
+    if speed > 0:
+        speed -= friction
+    elif speed < 0:
+        speed += friction
+
+    # Movement
+    x += math.sin(math.radians(angle)) * speed
+    y += math.cos(math.radians(angle)) * -speed
+
+    # Draw kart
+    rotated_kart = pygame.transform.rotate(kart, angle)
+    new_rect = rotated_kart.get_rect(center=(x, y))
+    screen.blit(rotated_kart, new_rect)
+
+    # Event handling
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()
+sys.exit()
+
